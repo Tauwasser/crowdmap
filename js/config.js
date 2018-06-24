@@ -138,6 +138,13 @@ var config = {
 			return self.root_path + 'tilesets/' + zfill(i, 2) + '_metatiles.bin'
 		})
 	},
+	getCollisionPath: function (id) {
+		var self = this
+		return self.getTilesetId(id)
+		.then(function (i) {
+			return self.root_path + 'tilesets/' + zfill(i, 2) + '_collision.bin'
+		})
+	},
 	getPalmapPath: function (id) {
 		var self = this
 		return self.getTilesetId(id)

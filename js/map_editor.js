@@ -1312,6 +1312,9 @@ var BlockViewer = {
 	get blockdata () {
 		return this.tileset.blockdata
 	},
+	get collisiondata () {
+		return this.tileset.collisiondata
+	},
 	get height () {
 		return Math.ceil(this.size / this.width)
 	},
@@ -1326,6 +1329,8 @@ var BlockViewer = {
 
 		this.width = 4
 
+		this.coll_w = 2
+		this.coll_h = 2
 		this.meta_w = 4
 		this.meta_h = 4
 		this.tile_w = 8
@@ -1413,6 +1418,7 @@ var BlockViewer = {
 			}
 		}
 		this.drawBlockNumbers()
+		this.drawBlockCollisions()
 	},
 
 	drawBlockNumbers: function () {
@@ -1432,6 +1438,36 @@ var BlockViewer = {
 				var text = i.toString(16).toUpperCase()
 				drawcontext.strokeText(text, text_x, text_y)
 				drawcontext.fillText(text, text_x, text_y)
+			}
+			i += 1
+		}
+		drawcontext.restore()
+	},
+	
+	drawBlockCollisions: function () {
+		var drawcontext = this.drawcanvas.getContext('2d')
+		drawcontext.save()
+		drawcontext.font = '8px Segoe UI Symbol, sans-serif'
+		drawcontext.fillStyle = 'white'
+		drawcontext.strokeStyle = 'purple'
+		drawcontext.lineWidth = 3
+		drawcontext.textBaseline = 'top'
+		var step_x = this.meta_w / this.coll_w
+		var step_y = this.meta_h / this.coll_h
+		var i = 0
+		for (var y = 0; y < this.height; y++)
+		for (var x = 0; x < this.width; x++) {
+			if (i < this.collisiondata.length) {
+				var coll = this.tileset.collisions[i]
+				var text_x = x * this.meta_w * this.tile_w
+				var text_y = y * this.meta_h * this.tile_h + this.tile_h
+				for (var coll_y = 0; coll_y < this.coll_h; coll_y++) {
+					for (var coll_x = 0; coll_x < this.coll_w; coll_x++) {
+						var text = coll[coll_y * this.coll_w + coll_x].toString(16).toUpperCase()
+						drawcontext.strokeText(text, text_x + coll_x * step_x * this.tile_w, text_y + coll_y * step_y * this.tile_h)
+						drawcontext.fillText(text, text_x + coll_x * step_x * this.tile_w, text_y + coll_y * step_y * this.tile_h)
+					}
+				}
 			}
 			i += 1
 		}
@@ -2628,6 +2664,7 @@ function loadTileset (id) {
 	}
 	return Promise.all([
 		loadTilesetMetatiles(id),
+		loadTilesetCollisions(id),
 		loadTilesetPalmap(id),
 		loadTilesetPalette(id),
 		loadTilesetImage(id)
@@ -2648,6 +2685,20 @@ function loadTilesetMetatiles(id) {
 	.then(function (metatiles) {
 		Data.tilesets[id].metatiles = metatiles
 		Data.tilesets[id].blockdata = range(metatiles.length)
+	})
+}
+
+function loadTilesetCollisions(id) {
+	return config.getCollisionPath(id)
+	.then(function (path) {
+		return File.readAsync(path, { binary: true })
+	})
+	.then(function (data) {
+		return deserializeCollisions(data)
+	})
+	.then(function (collisions) {
+		Data.tilesets[id].collisions = collisions
+		Data.tilesets[id].collisiondata = range(collisions.length)
 	})
 }
 
@@ -2720,6 +2771,13 @@ function deserializeMetatiles (data) {
 	var meta_h = 4
 	var metatiles = subdivide(data, meta_w * meta_h)
 	return metatiles
+}
+
+function deserializeCollisions (data) {
+	var meta_w = 2
+	var meta_h = 2
+	var collisiontiles = subdivide(data, meta_w * meta_h)
+	return collisiontiles
 }
 
 function deserializePalmap (data) {
