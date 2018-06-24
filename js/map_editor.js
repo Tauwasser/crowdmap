@@ -1343,7 +1343,7 @@ var BlockViewer = {
 
 		this.drawcanvas = createElement('canvas')
 
-		this.scale = 1
+		this.scale = 2
 
 		this.container = createElement('div', {
 			id: 'pickerbar',
@@ -1475,6 +1475,8 @@ var BlockViewer = {
 	},
 
 	drawSelectedBlock: function () {
+		var size_x = this.meta_w * this.tile_w * this.scale
+		var size_y = this.meta_h * this.tile_h * this.scale
 		if (painter) {
 			var selected = painter.getPaintBlock()
 			if (selected >= 0 && this.blockdata && selected < this.blockdata.length) {
@@ -1485,7 +1487,7 @@ var BlockViewer = {
 				ctx.strokeStyle = 'red'
 				ctx.lineWidth = 2
 				var rect = new Path2D()
-				rect.rect(x * 32, y * 32, 32, 32)
+				rect.rect(x * size_x, y * size_y, size_x, size_y)
 				ctx.stroke(rect)
 				ctx.restore()
 			}
